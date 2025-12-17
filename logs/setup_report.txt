@@ -1,0 +1,46 @@
+RELATÓRIO DE CONFIGURAÇÃO DO SISTEMA SIEM
+==================================================
+
+Data do Setup: 2025-12-17 17:48:36
+Versão do PHP: 8.2.15
+Sistema Operacional: WINNT
+Diretório de Logs: C:\PROJETOS\ReimpressaoNF\logs\
+
+CONFIGURAÇÕES PRINCIPAIS:
+-------------------------
+• Retenção de Logs: 90 dias
+• Max Falhas de Login/Min: 5
+• Max Falhas de Login/Hora: 20
+• Alertas por Email: Desabilitado
+• Refresh do Dashboard: 30 segundos
+
+ARQUIVOS CRIADOS:
+----------------
+• siem_config.php - Configurações do sistema
+• siem_logger.php - Sistema de logging
+• siem_detector.php - Detector de anomalias
+• siem_alerts.php - Sistema de alertas
+• siem_dashboard.php - Dashboard web
+• siem_middleware.php - Middleware de segurança
+• siem_setup.php - Script de setup (este arquivo)
+• siem_integration_example.php - Exemplos de integração
+
+PRÓXIMOS PASSOS:
+---------------
+1. Configure as variáveis de ambiente ou arquivo .env para alertas
+2. Adicione 'require_once "siem_middleware.php";' nos seus scripts PHP
+3. Acesse o dashboard em: http://seudominio/siem_dashboard.php
+4. Configure um cron job para limpeza automática de logs
+5. Teste o sistema com algumas ações e verifique os logs
+
+COMANDOS ÚTEIS:
+---------------
+# Verificar logs de segurança
+tail -f C:\PROJETOS\ReimpressaoNF\logs\security_events.log
+
+# Verificar alertas
+tail -f C:\PROJETOS\ReimpressaoNF\logs\alerts.log
+
+# Limpeza manual de logs antigos
+php -c 'require "siem_logger.php"; SiemLogger::getInstance()->cleanOldLogs();'
+

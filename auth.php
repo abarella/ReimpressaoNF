@@ -1,9 +1,9 @@
 <?php
 /**
- * Sistema de Autenticação com Active Directory (LDAP)
+ * Sistema de Autenticaï¿½ï¿½o com Active Directory (LDAP)
  * 
- * IMPORTANTE: Este arquivo contém funções de autenticação sensíveis.
- * Mantenha este arquivo protegido e não exponha informações de erro detalhadas.
+ * IMPORTANTE: Este arquivo contï¿½m funï¿½ï¿½es de autenticaï¿½ï¿½o sensï¿½veis.
+ * Mantenha este arquivo protegido e nï¿½o exponha informaï¿½ï¿½es de erro detalhadas.
  */
 
 // Define encoding UTF-8
@@ -19,32 +19,32 @@ if (php_sapi_name() !== 'cli') {
     }
 }
 
-// Carrega configurações
+// Carrega configuraï¿½ï¿½es
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'config.php';
 
 /**
- * Inicia sessão segura
+ * Inicia sessï¿½o segura
  */
 function iniciarSessaoSegura() {
     if (session_status() === PHP_SESSION_NONE) {
-        // Configurações de segurança da sessão
+        // Configuraï¿½ï¿½es de seguranï¿½a da sessï¿½o
         ini_set('session.cookie_httponly', '1');
         ini_set('session.cookie_secure', '0'); // Mude para 1 se usar HTTPS
         ini_set('session.use_strict_mode', '1');
         ini_set('session.cookie_samesite', 'Strict');
         
-        // Timeout de sessão (30 minutos)
+        // Timeout de sessï¿½o (30 minutos)
         ini_set('session.gc_maxlifetime', '1800');
         
         try {
             session_start();
         } catch (Exception $e) {
-            error_log("Erro ao iniciar sessão: " . $e->getMessage());
-            // Tenta iniciar novamente sem configurações especiais se falhar
+            error_log("Erro ao iniciar sessï¿½o: " . $e->getMessage());
+            // Tenta iniciar novamente sem configuraï¿½ï¿½es especiais se falhar
             @session_start();
         }
         
-        // Regenera ID da sessão periodicamente para prevenir session fixation
+        // Regenera ID da sessï¿½o periodicamente para prevenir session fixation
         if (!isset($_SESSION['created'])) {
             $_SESSION['created'] = time();
         } else if (time() - $_SESSION['created'] > 1800) {
@@ -55,21 +55,21 @@ function iniciarSessaoSegura() {
 }
 
 /**
- * Autentica usuário no Active Directory via LDAP
+ * Autentica usuï¿½rio no Active Directory via LDAP
  * 
- * @param string $username Nome de usuário (sem domínio)
- * @param string $password Senha do usuário
- * @return array|false Retorna array com dados do usuário ou false em caso de falha
+ * @param string $username Nome de usuï¿½rio (sem domï¿½nio)
+ * @param string $password Senha do usuï¿½rio
+ * @return array|false Retorna array com dados do usuï¿½rio ou false em caso de falha
  */
 function autenticarAD($username, $password) {
-    // Carrega configurações do AD (suporta formato Laravel e formato antigo)
+    // Carrega configuraï¿½ï¿½es do AD (suporta formato Laravel e formato antigo)
     $adServer = getenv('LDAP_HOST') ?: getenv('AD_SERVER') ?: '';
     $adBaseDN = getenv('LDAP_BASE_DN') ?: getenv('AD_BASE_DN') ?: '';
     $adPort = getenv('LDAP_PORT') ?: getenv('AD_PORT') ?: '389';
     $adTimeout = getenv('LDAP_TIMEOUT') ?: '5';
     $adDomain = getenv('AD_DOMAIN') ?: '';
     
-    // Tenta carregar do arquivo .env se não encontrou nas variáveis de ambiente
+    // Tenta carregar do arquivo .env se nï¿½o encontrou nas variï¿½veis de ambiente
     if (empty($adServer) || empty($adBaseDN)) {
         $envFile = __DIR__ . DIRECTORY_SEPARATOR . '.env';
         if (file_exists($envFile)) {
@@ -117,13 +117,13 @@ function autenticarAD($username, $password) {
         }
     }
     
-    // Extrai domínio do BASE_DN se não foi configurado explicitamente
+    // Extrai domï¿½nio do BASE_DN se nï¿½o foi configurado explicitamente
     if (empty($adDomain) && !empty($adBaseDN)) {
         // Extrai de DC=ip,DC=ipen,DC=br -> ipen.br
         if (preg_match_all('/DC=([^,]+)/i', $adBaseDN, $matches)) {
             $dcParts = $matches[1];
             if (count($dcParts) >= 2) {
-                // Pega os últimos dois DCs para formar o domínio
+                // Pega os ï¿½ltimos dois DCs para formar o domï¿½nio
                 $adDomain = implode('.', array_slice($dcParts, -2));
             } else {
                 $adDomain = $dcParts[0];
@@ -131,9 +131,9 @@ function autenticarAD($username, $password) {
         }
     }
     
-    // Valida configurações
+    // Valida configuraï¿½ï¿½es
     if (empty($adServer) || empty($adBaseDN)) {
-        error_log('Configurações do Active Directory não encontradas. LDAP_HOST e LDAP_BASE_DN são obrigatórios.');
+        error_log('Configuraï¿½ï¿½es do Active Directory nï¿½o encontradas. LDAP_HOST e LDAP_BASE_DN sï¿½o obrigatï¿½rios.');
         return false;
     }
     
@@ -149,7 +149,7 @@ function autenticarAD($username, $password) {
         $usernameOriginal = $username;
         $usernameClean = $username;
         
-        // Remove domínio do username se presente (ex: DOMINIO\usuario -> usuario)
+        // Remove domï¿½nio do username se presente (ex: DOMINIO\usuario -> usuario)
         if (strpos($usernameClean, '\\') !== false) {
             $usernameClean = explode('\\', $usernameClean)[1];
         }
@@ -157,11 +157,11 @@ function autenticarAD($username, $password) {
             $usernameClean = explode('@', $usernameClean)[0];
         }
         
-        // Formata DN do usuário
+        // Formata DN do usuï¿½rio
         // Tenta diferentes formatos de DN e UPN
         $dnFormats = [];
         
-        // Se o username original já tem formato completo, usa ele primeiro
+        // Se o username original jï¿½ tem formato completo, usa ele primeiro
         if (strpos($usernameOriginal, '@') !== false) {
             $dnFormats[] = $usernameOriginal; // UPN completo: usuario@ipen.br
         }
@@ -170,12 +170,12 @@ function autenticarAD($username, $password) {
         if (!empty($adDomain)) {
             $dnFormats[] = "{$usernameClean}@{$adDomain}"; // UPN: usuario@ipen.br
         }
-        $dnFormats[] = "CN={$usernameClean},CN=Users,{$adBaseDN}"; // DN padrão
+        $dnFormats[] = "CN={$usernameClean},CN=Users,{$adBaseDN}"; // DN padrï¿½o
         $dnFormats[] = "CN={$usernameClean},{$adBaseDN}"; // DN alternativo
         
-        // Para IPEN, também tenta formato específico
+        // Para IPEN, tambï¿½m tenta formato especï¿½fico
         if (strpos($adBaseDN, 'ipen') !== false) {
-            $dnFormats[] = "{$usernameClean}@ip.ipen.br"; // UPN específico IPEN
+            $dnFormats[] = "{$usernameClean}@ip.ipen.br"; // UPN especï¿½fico IPEN
         }
     
     $ldapConn = false;
@@ -190,16 +190,16 @@ function autenticarAD($username, $password) {
             return false;
         }
         
-        // Configura opções LDAP
+        // Configura opï¿½ï¿½es LDAP
         ldap_set_option($ldapConn, LDAP_OPT_PROTOCOL_VERSION, 3);
         ldap_set_option($ldapConn, LDAP_OPT_REFERRALS, 0);
         ldap_set_option($ldapConn, LDAP_OPT_NETWORK_TIMEOUT, (int)$adTimeout);
         
-        // Configura SSL/TLS se necessário (formato Laravel)
+        // Configura SSL/TLS se necessï¿½rio (formato Laravel)
         $useSSL = getenv('LDAP_SSL') === 'true' || getenv('LDAP_SSL') === '1';
         $useTLS = getenv('LDAP_TLS') === 'true' || getenv('LDAP_TLS') === '1';
         
-        // Carrega SSL/TLS do .env se não encontrou nas variáveis de ambiente
+        // Carrega SSL/TLS do .env se nï¿½o encontrou nas variï¿½veis de ambiente
         if (!$useSSL && !$useTLS) {
             $envFile = __DIR__ . DIRECTORY_SEPARATOR . '.env';
             if (file_exists($envFile)) {
@@ -241,12 +241,12 @@ function autenticarAD($username, $password) {
         }
         
         if (!$ldapBound) {
-            error_log("Falha na autenticação AD para usuário: {$usernameOriginal} (tentou formatos: " . implode(', ', array_slice($dnFormats, 0, 3)) . "...)");
+            error_log("Falha na autenticaï¿½ï¿½o AD para usuï¿½rio: {$usernameOriginal} (tentou formatos: " . implode(', ', array_slice($dnFormats, 0, 3)) . "...)");
             @ldap_close($ldapConn);
             return false;
         }
         
-        // Busca informações do usuário no AD usando sAMAccountName ou UPN
+        // Busca informaï¿½ï¿½es do usuï¿½rio no AD usando sAMAccountName ou UPN
         // Tenta tanto com username limpo quanto com username original
         $searchFilter = "(|(sAMAccountName={$usernameClean})(userPrincipalName={$usernameOriginal})(userPrincipalName={$usernameClean}@{$adDomain}))";
         if (empty($adDomain)) {
@@ -257,7 +257,7 @@ function autenticarAD($username, $password) {
         $searchResult = @ldap_search($ldapConn, $adBaseDN, $searchFilter, $searchAttributes);
         
         if (!$searchResult) {
-            error_log("Erro ao buscar usuário no AD: {$usernameOriginal} - " . ldap_error($ldapConn));
+            error_log("Erro ao buscar usuï¿½rio no AD: {$usernameOriginal} - " . ldap_error($ldapConn));
             @ldap_close($ldapConn);
             return false;
         }
@@ -265,7 +265,7 @@ function autenticarAD($username, $password) {
         $entries = @ldap_get_entries($ldapConn, $searchResult);
         
         if (!$entries || $entries['count'] == 0) {
-            error_log("Usuário não encontrado no AD após autenticação: {$usernameOriginal} (buscou com: {$usernameClean})");
+            error_log("Usuï¿½rio nï¿½o encontrado no AD apï¿½s autenticaï¿½ï¿½o: {$usernameOriginal} (buscou com: {$usernameClean})");
             @ldap_close($ldapConn);
             return false;
         }
@@ -277,7 +277,7 @@ function autenticarAD($username, $password) {
                      strtolower($userInfo['samaccountname'][0]) : 
                      $usernameClean;
         
-        // Extrai informações do usuário
+        // Extrai informaï¿½ï¿½es do usuï¿½rio
         $userData = [
             'username' => $adUsername,
             'displayName' => isset($userInfo['displayname'][0]) ? $userInfo['displayname'][0] : 
@@ -288,7 +288,7 @@ function autenticarAD($username, $password) {
             'groups' => []
         ];
         
-        // Extrai grupos do usuário
+        // Extrai grupos do usuï¿½rio
         if (isset($userInfo['memberof']) && is_array($userInfo['memberof'])) {
             foreach ($userInfo['memberof'] as $group) {
                 if (is_string($group)) {
@@ -305,7 +305,7 @@ function autenticarAD($username, $password) {
         return $userData;
         
     } catch (Exception $e) {
-        error_log("Exceção na autenticação AD: " . $e->getMessage());
+        error_log("Exceï¿½ï¿½o na autenticaï¿½ï¿½o AD: " . $e->getMessage());
         if ($ldapConn) {
             @ldap_close($ldapConn);
         }
@@ -314,7 +314,7 @@ function autenticarAD($username, $password) {
 }
 
 /**
- * Verifica se o usuário está autenticado
+ * Verifica se o usuï¿½rio estï¿½ autenticado
  * 
  * @return bool
  */
@@ -327,7 +327,7 @@ function estaAutenticado() {
 }
 
 /**
- * Requer autenticação - redireciona para login se não autenticado
+ * Requer autenticaï¿½ï¿½o - redireciona para login se nï¿½o autenticado
  */
 function requerAutenticacao() {
     if (!estaAutenticado()) {
@@ -337,30 +337,30 @@ function requerAutenticacao() {
         exit;
     }
     
-    // Atualiza último acesso
+    // Atualiza ï¿½ltimo acesso
     $_SESSION['ultimo_acesso'] = time();
 }
 
 /**
- * Faz logout do usuário
+ * Faz logout do usuï¿½rio
  */
 function fazerLogout() {
     iniciarSessaoSegura();
     
-    // Limpa todas as variáveis de sessão
+    // Limpa todas as variï¿½veis de sessï¿½o
     $_SESSION = [];
     
-    // Destrói cookie de sessão
+    // Destrï¿½i cookie de sessï¿½o
     if (isset($_COOKIE[session_name()])) {
         setcookie(session_name(), '', time() - 3600, '/');
     }
     
-    // Destrói sessão
+    // Destrï¿½i sessï¿½o
     session_destroy();
 }
 
 /**
- * Obtém dados do usuário autenticado
+ * Obtï¿½m dados do usuï¿½rio autenticado
  * 
  * @return array|null
  */
@@ -372,7 +372,7 @@ function obterUsuario() {
 }
 
 /**
- * Verifica se o usuário pertence a um grupo específico
+ * Verifica se o usuï¿½rio pertence a um grupo especï¿½fico
  * 
  * @param string $grupo Nome do grupo
  * @return bool
@@ -387,18 +387,18 @@ function usuarioPertenceAoGrupo($grupo) {
 }
 
 /**
- * Gera token CSRF e armazena na sessão
+ * Gera token CSRF e armazena na sessï¿½o
  * 
  * @return string Token CSRF
  */
 function gerarTokenCSRF() {
     try {
-        // Garante que a sessão está iniciada
+        // Garante que a sessï¿½o estï¿½ iniciada
         if (session_status() === PHP_SESSION_NONE) {
             iniciarSessaoSegura();
         }
         
-        // Gera novo token se não existir ou se expirou (regenera a cada 1 hora)
+        // Gera novo token se nï¿½o existir ou se expirou (regenera a cada 1 hora)
         if (!isset($_SESSION['csrf_token']) || 
             !isset($_SESSION['csrf_token_time']) || 
             (time() - $_SESSION['csrf_token_time']) > 3600) {
@@ -411,7 +411,7 @@ function gerarTokenCSRF() {
         // Em caso de erro, retorna string vazia e loga o erro
         error_log("Erro ao gerar token CSRF: " . $e->getMessage());
         error_log("Stack trace: " . $e->getTraceAsString());
-        // Retorna token temporário para não quebrar a página
+        // Retorna token temporï¿½rio para nï¿½o quebrar a pï¿½gina
         return bin2hex(random_bytes(16));
     }
 }
@@ -420,7 +420,7 @@ function gerarTokenCSRF() {
  * Valida token CSRF
  * 
  * @param string $token Token CSRF a ser validado
- * @return bool True se válido, False caso contrário
+ * @return bool True se vï¿½lido, False caso contrï¿½rio
  */
 function validarTokenCSRF($token) {
     iniciarSessaoSegura();
@@ -434,16 +434,16 @@ function validarTokenCSRF($token) {
 }
 
 /**
- * Requer validação CSRF em requisições POST
- * Lança exceção se token inválido
+ * Requer validaï¿½ï¿½o CSRF em requisiï¿½ï¿½es POST
+ * Lanï¿½a exceï¿½ï¿½o se token invï¿½lido
  */
 function requerCSRF() {
-    // Só valida CSRF em requisições POST
+    // Sï¿½ valida CSRF em requisiï¿½ï¿½es POST
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         return;
     }
     
-    // Garante que a sessão está iniciada
+    // Garante que a sessï¿½o estï¿½ iniciada
     iniciarSessaoSegura();
     
     $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
@@ -453,7 +453,7 @@ function requerCSRF() {
         error_log("Tentativa de CSRF bloqueada. IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'desconhecido') . 
                  " | Token recebido: " . substr($token, 0, 10) . "...");
         
-        // Verifica se é requisição AJAX (JSON) ou HTML
+        // Verifica se ï¿½ requisiï¿½ï¿½o AJAX (JSON) ou HTML
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
                   strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
         
@@ -462,11 +462,11 @@ function requerCSRF() {
             header('Content-Type: application/json; charset=UTF-8');
             die(json_encode([
                 'success' => false,
-                'error' => 'Token de segurança inválido. Por favor, recarregue a página e tente novamente.'
+                'error' => 'Token de seguranï¿½a invï¿½lido. Por favor, recarregue a pï¿½gina e tente novamente.'
             ], JSON_UNESCAPED_UNICODE));
         } else {
             http_response_code(403);
-            die('Token de segurança inválido. Por favor, recarregue a página e tente novamente.');
+            die('Token de seguranï¿½a invï¿½lido. Por favor, recarregue a pï¿½gina e tente novamente.');
         }
     }
 }
@@ -479,9 +479,9 @@ function registrarTentativaLogin($username, $sucesso, $ip = null) {
     $timestamp = date('Y-m-d H:i:s');
     $status = $sucesso ? 'SUCESSO' : 'FALHA';
     
-    $logMessage = "[{$timestamp}] Login {$status} - Usuário: {$username} - IP: {$ip}" . PHP_EOL;
+    $logMessage = "[{$timestamp}] Login {$status} - Usuï¿½rio: {$username} - IP: {$ip}" . PHP_EOL;
     
-    // Cria diretório de logs se não existir
+    // Cria diretï¿½rio de logs se nï¿½o existir
     $logDir = __DIR__ . DIRECTORY_SEPARATOR . 'logs';
     if (!is_dir($logDir)) {
         @mkdir($logDir, 0755, true);
@@ -489,5 +489,31 @@ function registrarTentativaLogin($username, $sucesso, $ip = null) {
     
     $logFile = $logDir . DIRECTORY_SEPARATOR . 'auth.log';
     @file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+    
+    // IntegraÃ§Ã£o com SIEM
+    if (file_exists(__DIR__ . DIRECTORY_SEPARATOR . 'siem_logger.php')) {
+        require_once __DIR__ . DIRECTORY_SEPARATOR . 'siem_logger.php';
+        require_once __DIR__ . DIRECTORY_SEPARATOR . 'siem_detector.php';
+        require_once __DIR__ . DIRECTORY_SEPARATOR . 'siem_alerts.php';
+        
+        try {
+            if ($sucesso) {
+                logLoginSuccess($username, $ip);
+            } else {
+                logLoginFailure($username, $ip, 'Authentication failed');
+                
+                // Executa detecÃ§Ã£o de anomalias em tempo real
+                $detector = new SiemAnomalyDetector();
+                $alerter = new SiemAlerter();
+                $detector->setAlerter($alerter);
+                
+                // Analisa a requisiÃ§Ã£o atual para detectar anomalias
+                $detector->analyzeCurrentRequest();
+            }
+        } catch (Exception $e) {
+            error_log("Erro no sistema SIEM durante login: " . $e->getMessage());
+            // Continua mesmo se o SIEM falhar
+        }
+    }
 }
 

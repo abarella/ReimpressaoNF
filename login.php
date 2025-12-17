@@ -1,7 +1,10 @@
 <?php
 /**
- * Página de Login - Autenticação Active Directory
+ * PÃ¡gina de Login - AutenticaÃ§Ã£o Active Directory
  */
+
+// Middleware de seguranÃ§a SIEM
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'siem_middleware.php';
 
 // Define encoding UTF-8 ANTES de qualquer coisa
 mb_internal_encoding('UTF-8');
@@ -18,14 +21,14 @@ while (ob_get_level() > 0) {
 }
 // Inicia output buffer com handler UTF-8
 ob_start(function($buffer) {
-    // Garante que o buffer está em UTF-8
+    // Garante que o buffer estÃ¡ em UTF-8
     if (!mb_check_encoding($buffer, 'UTF-8')) {
         $buffer = mb_convert_encoding($buffer, 'UTF-8', mb_detect_encoding($buffer));
     }
     return $buffer;
 });
 
-// Função helper para garantir encoding UTF-8 correto em strings
+// FunÃ§Ã£o helper para garantir encoding UTF-8 correto em strings
 function utf8($str) {
     if (!mb_check_encoding($str, 'UTF-8')) {
         return mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
@@ -35,7 +38,7 @@ function utf8($str) {
 
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'auth.php';
 
-// Se já estiver autenticado, redireciona para a página principal
+// Se jÃ¡ estiver autenticado, redireciona para a pÃ¡gina principal
 if (estaAutenticado()) {
     $redirect = $_SESSION['redirect_after_login'] ?? 'reimpressaoNF.php';
     unset($_SESSION['redirect_after_login']);
@@ -50,7 +53,7 @@ $mensagem = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao']) && $_POST['acao'] === 'login') {
     // Valida token CSRF
     if (!validarTokenCSRF($_POST['csrf_token'] ?? '')) {
-        $erro = utf8('Token de segurança inválido. Por favor, recarregue a página e tente novamente.');
+        $erro = utf8('Token de seguranÃ§a invÃ¡lido. Por favor, recarregue a pÃ¡gina e tente novamente.');
     } else {
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
@@ -73,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao']) && $_POST['ac
                 // Registra login bem-sucedido
                 registrarTentativaLogin($username, true);
                 
-                // Redireciona para página solicitada ou página principal
+                // Redireciona para pÃ¡gina solicitada ou pÃ¡gina principal
                 $redirect = $_SESSION['redirect_after_login'] ?? 'reimpressaoNF.php';
                 unset($_SESSION['redirect_after_login']);
                 
@@ -81,21 +84,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao']) && $_POST['ac
                 exit;
             } else {
                 // Login falhou
-                $erro = utf8('Usuário ou senha inválidos. Verifique suas credenciais e tente novamente.');
+                $erro = utf8('UsuÃ¡rio ou senha invÃ¡lidos. Verifique suas credenciais e tente novamente.');
                 registrarTentativaLogin($username, false);
             }
         }
     }
 }
 
-// Verifica se há mensagem de logout
+// Verifica se hÃ¡ mensagem de logout
 if (isset($_GET['logout']) && $_GET['logout'] === '1') {
-    $mensagem = utf8('Você foi desconectado com sucesso.');
+    $mensagem = utf8('VocÃª foi desconectado com sucesso.');
 }
 
-// Verifica se foi redirecionado por falta de autenticação
+// Verifica se foi redirecionado por falta de autenticaÃ§Ã£o
 if (isset($_GET['redirect']) && $_GET['redirect'] === '1') {
-    $mensagem = utf8('Por favor, faça login para acessar o sistema.');
+    $mensagem = utf8('Por favor, faÃ§a login para acessar o sistema.');
 }
 ?>
 <!DOCTYPE html>
@@ -104,7 +107,7 @@ if (isset($_GET['redirect']) && $_GET['redirect'] === '1') {
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars(utf8('Login - Sistema de Reimpressão de Notas Fiscais'), ENT_QUOTES, 'UTF-8'); ?></title>
+    <title><?php echo htmlspecialchars(utf8('Login - Sistema de ReimpressÃ£o de Notas Fiscais'), ENT_QUOTES, 'UTF-8'); ?></title>
     <style>
         * {
             margin: 0;
@@ -311,7 +314,7 @@ if (isset($_GET['redirect']) && $_GET['redirect'] === '1') {
                 </a>
             </li>
         </ul>
-        <div class="applicationname-light flex-grow-1 text-center"><?php echo htmlspecialchars(utf8('Reimpressão de Notas Fiscais'), ENT_QUOTES, 'UTF-8'); ?></div>
+        <div class="applicationname-light flex-grow-1 text-center"><?php echo htmlspecialchars(utf8('ReimpressÃ£o de Notas Fiscais'), ENT_QUOTES, 'UTF-8'); ?></div>
         <!-- Right navbar links - vazio na tela de login -->
         <ul class="navbar-nav ml-auto">
         </ul>
@@ -322,7 +325,7 @@ if (isset($_GET['redirect']) && $_GET['redirect'] === '1') {
         <div class="login-container">
             <div class="login-header">
                 <h1>Login</h1>
-                <p><?php echo htmlspecialchars(utf8('Sistema de Reimpressão de Notas Fiscais'), ENT_QUOTES, 'UTF-8'); ?></p>
+                <p><?php echo htmlspecialchars(utf8('Sistema de ReimpressÃ£o de Notas Fiscais'), ENT_QUOTES, 'UTF-8'); ?></p>
             </div>
         
         <?php if ($erro): ?>
@@ -342,7 +345,7 @@ if (isset($_GET['redirect']) && $_GET['redirect'] === '1') {
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(gerarTokenCSRF(), ENT_QUOTES, 'UTF-8'); ?>">
             
             <div class="form-group">
-                <label for="username"><?php echo htmlspecialchars(utf8('Usuário:'), ENT_QUOTES, 'UTF-8'); ?></label>
+                <label for="username"><?php echo htmlspecialchars(utf8('UsuÃ¡rio:'), ENT_QUOTES, 'UTF-8'); ?></label>
                 <input 
                     type="text" 
                     id="username" 
@@ -350,7 +353,7 @@ if (isset($_GET['redirect']) && $_GET['redirect'] === '1') {
                     required 
                     autofocus
                     autocomplete="username"
-                    placeholder="<?php echo htmlspecialchars(utf8('Digite seu usuário de rede'), ENT_QUOTES, 'UTF-8'); ?>"
+                    placeholder="<?php echo htmlspecialchars(utf8('Digite seu usuÃ¡rio de rede'), ENT_QUOTES, 'UTF-8'); ?>"
                 >
             </div>
             

@@ -4,6 +4,9 @@
  * Conversão do programa Python reimpressaoNF.py para PHP
  */
 
+// Middleware de segurança SIEM
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'siem_middleware.php';
+
 // Define encoding UTF-8
 mb_internal_encoding('UTF-8');
 mb_http_output('UTF-8');
